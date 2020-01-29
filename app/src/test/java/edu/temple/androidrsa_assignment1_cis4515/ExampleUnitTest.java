@@ -11,7 +11,22 @@ import static org.junit.Assert.*;
  */
 public class ExampleUnitTest {
     @Test
-    public void addition_isCorrect() {
-        assertEquals(4, 2 + 2);
+    public void isKeyGenValid() {
+        // test getMyKeyPair() that a KeyPair is actually generated
+    }
+
+    @Test
+    public void canSaveAndRetrievePublicKey() {
+        // test storePublicKey and getPublicKey
+    }
+
+    @Test
+    public void canRetrieveKeyByName() {
+        // test getMyKeyPair() that you're able to access both the private and public keys in that KeyPair
+    }
+
+    @Test
+    public void canEncryptAndDecryptArbitraryText() {
+        // test encrypting and decrypting using KeyPair
     }
 }
