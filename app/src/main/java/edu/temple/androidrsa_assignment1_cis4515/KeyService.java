@@ -25,7 +25,7 @@ public class KeyService extends Service {
     private final KeyService.KeyBinder binder = new KeyService.KeyBinder();
     private KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
     private KeyPair myKeyPair = null;
-    Hashtable<String, PublicKey> partnersTable = new Hashtable<>();
+    public static Hashtable<String, PublicKey> partnersTable = new Hashtable<>();
 
     public KeyService() throws NoSuchAlgorithmException {
     }
@@ -39,8 +39,8 @@ public class KeyService extends Service {
 
     /*
         Generate and/or retrieve a user’s RSA KeyPair. The first call to this
-        method will generate and store the keypair before returning it. Subsequent calls will return the
-        same key pair
+        method will generate and store the keypair before returning it.
+        Subsequent calls will return the same key pair
      */
     public KeyPair getMyKeyPair() {
         if (myKeyPair == null) {
@@ -111,7 +111,8 @@ public class KeyService extends Service {
     }
 
     /*
-        Decrypt a message that was encrypted with the user's public key, using their private key
+        Decrypt a message that was encrypted with the
+        user's public key, using their private key
      */
     public String decryptMessage(byte[] encryptedMessage, PrivateKey privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         Cipher cipher = Cipher.getInstance("RSA");
@@ -125,8 +126,8 @@ public class KeyService extends Service {
 
         /*
         Generate and/or retrieve a user’s RSA KeyPair. The first call to this
-        method will generate and store the keypair before returning it. Subsequent calls will return the
-        same key pair
+        method will generate and store the keypair before returning it.
+        Subsequent calls will return the same key pair
      */
         public KeyPair getMyKeyPair() {
             return KeyService.this.getMyKeyPair();
@@ -159,6 +160,21 @@ public class KeyService extends Service {
          */
         public void resetKey(String partnerName) {
             KeyService.this.resetKey(partnerName);
+        }
+
+        /*
+            Encrypt a message using the receiver's public key
+        */
+        public byte[] encryptMessage(String message, PublicKey publicKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException, BadPaddingException, IllegalBlockSizeException {
+            return KeyService.this.encryptMessage(message, publicKey);
+        }
+
+        /*
+            Decrypt a message that was encrypted with the
+            user's public key, using their private key
+         */
+        public String decryptMessage(byte[] encryptedMessage, PrivateKey privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+            return KeyService.this.decryptMessage(encryptedMessage, privateKey);
         }
     }
 }
