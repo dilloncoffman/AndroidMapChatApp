@@ -14,7 +14,7 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.Hashtable;
+import java.util.HashMap;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -25,14 +25,15 @@ public class KeyService extends Service {
     private final KeyService.KeyBinder binder = new KeyService.KeyBinder();
     private KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
     private KeyPair myKeyPair = null;
-    public static Hashtable<String, PublicKey> partnersTable = new Hashtable<>();
+    public static HashMap<String, PublicKey> partnersMap = new HashMap<>();
+    public static PublicKey myPublicKey;
+    public static PrivateKey myPrivateKey;
 
     public KeyService() throws NoSuchAlgorithmException {
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
         Log.i("KeyService", "KeyService bound");
         return this.binder;
     }
@@ -45,6 +46,8 @@ public class KeyService extends Service {
     public KeyPair getMyKeyPair() {
         if (myKeyPair == null) {
             myKeyPair = keyPairGenerator.generateKeyPair();
+            myPrivateKey = myKeyPair.getPrivate();
+            myPublicKey = myKeyPair.getPublic();
             return myKeyPair;
         } else {
             return myKeyPair;
@@ -53,11 +56,10 @@ public class KeyService extends Service {
 
     /*
         Store a key for a provided partner name
-        TODO Should we store KeyPairs using KeyStore or Hashtable for our purposes?
      */
     void storePublicKey (String partnerName, PublicKey publicKey) {
-        // store public key in partnersTable Hashtable
-        partnersTable.put(partnerName, publicKey);
+        // store public key in partnersMap Hashtable
+        partnersMap.put(partnerName, publicKey);
     }
 
     /*
@@ -65,10 +67,10 @@ public class KeyService extends Service {
         provided partner name
      */
     public PublicKey getPublicKey(String partnerName) {
-        if (partnersTable.containsKey(partnerName)) {
-            return partnersTable.get(partnerName);
+        if (partnersMap.containsKey(partnerName)) {
+            return partnersMap.get(partnerName);
         } else {
-            Log.d("KeyService", "Partner: "+partnerName+" does not exist in the partnersTable");
+            Log.d("KeyService", "Partner: "+partnerName+" does not exist in the partnersMap");
             return null;
         }
     }
@@ -77,27 +79,28 @@ public class KeyService extends Service {
         Erases current KeyPair and replaces it with a new KeyPair
         Safe to assume resetting a KeyPair also entails generating a new KeyPair
      */
-    public void resetMyKeyPair() {
+    public KeyPair resetMyKeyPair() {
         // Erase current key pair
         if (myKeyPair != null) {
             myKeyPair = null;
-        } else {
-            Log.d("KeyService", "Currently no key pair set");
-            return;
         }
         // Assuming you would want to generate a new key pair
         myKeyPair = keyPairGenerator.generateKeyPair();
+        myPrivateKey = myKeyPair.getPrivate();
+        myPublicKey = myKeyPair.getPublic();
+        return myKeyPair;
     }
 
     /*
         Erases current public key for a specific partner
-     */
-    public void resetKey(String partnerName) {
-        if (partnersTable.containsKey(partnerName)) {
+    */
+    public void resetPublicKey(String partnerName) {
+        if (partnersMap.containsKey(partnerName)) {
             // Reset that partner's public key
-            partnersTable.replace(partnerName, null);
+            partnersMap.replace(partnerName, null);
+            myPublicKey = null;
         } else {
-            Log.d("KeyService", "Partner: "+partnerName+" does not exist in the partnersTable");
+            Log.d("KeyService", "Partner: "+partnerName+" does not exist in the partnersMap");
         }
     }
 
@@ -151,15 +154,15 @@ public class KeyService extends Service {
         /*
             Erases current KeyPair and replaces it with a new KeyPair
          */
-        public void resetMyKeyPair() {
-            KeyService.this.resetMyKeyPair();
+        public KeyPair resetMyKeyPair() {
+            return KeyService.this.resetMyKeyPair();
         }
 
         /*
             Erases current public key for a specific partner
          */
-        public void resetKey(String partnerName) {
-            KeyService.this.resetKey(partnerName);
+        public void resetPublicKey(String partnerName) {
+            KeyService.this.resetPublicKey(partnerName);
         }
 
         /*

@@ -15,9 +15,17 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.util.Hashtable;
+import java.util.Arrays;
+import java.util.HashMap;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 import static org.junit.Assert.*;
 
@@ -25,7 +33,7 @@ import static org.junit.Assert.*;
 public class KeyServiceTest {
     private IBinder binder;
     private KeyPair kp;
-    private Hashtable<String, PublicKey> testPartnersTable = new Hashtable<>();
+    private HashMap<String, PublicKey> testPartnersMap = new HashMap<>();
     private String originalMessage = "hi there";
 
     @Rule
@@ -58,36 +66,80 @@ public class KeyServiceTest {
         Log.d("Private key: ", kp.getPrivate().toString());
         Log.d("Public key: ", kp.getPublic().toString());
         assertNotNull(kp);
+        assertNotNull(kp.getPrivate());
+        assertNotNull(kp.getPublic());
     }
 
     @Test
     public void canStorePublicKey() {
         ((KeyService.KeyBinder) binder).storePublicKey("dillon", kp.getPublic());
-        // Ensure partnersTable is not null after storing public key
-        assertNotNull(KeyService.partnersTable);
+        // Ensure partnersMap is not null after storing public key
+        assertNotNull(KeyService.partnersMap);
 
-        // Store same public key in local testPartnersTable and check that they're equal
-        testPartnersTable.put("dillon", kp.getPublic());
-        assertEquals(testPartnersTable, KeyService.partnersTable);
+        // Store same public key in local testPartnersMap and check that they're equal
+        testPartnersMap.put("dillon", kp.getPublic());
+        assertEquals(testPartnersMap, KeyService.partnersMap);
     }
 
     @Test
     public void canGetPublicKey() {
+        // Store public key for a user
+        ((KeyService.KeyBinder) binder).storePublicKey("dillon", kp.getPublic());
+        // Ensure partnersMap is not null after storing public key
+        assertNotNull(KeyService.partnersMap);
+
+        // Check that you can get a partner's public key by their name
+        PublicKey pk = ((KeyService.KeyBinder) binder).getPublicKey("dillon");
+        assertEquals(kp.getPublic(), pk);
     }
 
     @Test
     public void canResetMyKeyPair() {
+        KeyPair newKeyPair = ((KeyService.KeyBinder) binder).resetMyKeyPair();
+        assertNotEquals(kp, newKeyPair);
     }
 
     @Test
     public void canResetPublicKey() {
+        // Store public key for a user
+        ((KeyService.KeyBinder) binder).storePublicKey("dillon", kp.getPublic());
+        // Ensure partnersMap is not null after storing public key
+        assertNotNull(KeyService.partnersMap);
+        // Check that you can get a partner's public key by their name
+        PublicKey pk = ((KeyService.KeyBinder) binder).getPublicKey("dillon");
+        assertEquals(kp.getPublic(), pk);
+
+        // Reset partner's public key
+        ((KeyService.KeyBinder) binder).resetPublicKey("dillon");
+        // Public key in KeyService should be null while kp.getPublic() should still have the same public key it did before it was reset
+        assertNotEquals(kp.getPublic(), KeyService.myPublicKey);
     }
 
     @Test
-    public void canEncryptMessage() {
+    public void canEncryptMessage() throws NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, UnsupportedEncodingException, InvalidKeyException {
+        // Encrypt originalMessage
+        byte[] encryptedMsg = ((KeyService.KeyBinder) binder).encryptMessage(originalMessage, kp.getPublic());
+        System.out.println(Arrays.toString(encryptedMsg));
+        // Ensure newly encrypted message is not null
+        assertNotNull(encryptedMsg);
+        // Ensure encrypted message is not the same as the original message
+        assertNotEquals(encryptedMsg, originalMessage);
     }
 
     @Test
-    public void canDecryptMessage() {
+    public void canDecryptMessage() throws NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, UnsupportedEncodingException, InvalidKeyException {
+        // Encrypt originalMessage first
+        byte[] encryptedMsg = ((KeyService.KeyBinder) binder).encryptMessage(originalMessage, kp.getPublic());
+        System.out.println("Original message is: "+originalMessage);
+        System.out.println("Encrypted message is: "+Arrays.toString(encryptedMsg));
+        // Ensure newly encrypted message is not null
+        assertNotNull(encryptedMsg);
+        // Ensure encrypted message is not the same as the original message
+        assertNotEquals(encryptedMsg, originalMessage);
+
+        // Decrypt encrypted message and see if it matches original
+        String decryptedMessage = ((KeyService.KeyBinder) binder).decryptMessage(encryptedMsg, kp.getPrivate());
+        System.out.println("Decrypted message is: "+decryptedMessage);
+        assertEquals(originalMessage, decryptedMessage);
     }
 }
