@@ -19,7 +19,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -33,7 +33,7 @@ import static org.junit.Assert.*;
 public class KeyServiceTest {
     private IBinder binder;
     private KeyPair kp;
-    private HashMap<String, PublicKey> testPartnersMap = new HashMap<>();
+    private HashMap<String, RSAPublicKey> testPartnersMap = new HashMap<>();
     private String originalMessage = "hi there";
 
     @Rule
@@ -72,24 +72,24 @@ public class KeyServiceTest {
 
     @Test
     public void canStorePublicKey() {
-        ((KeyService.KeyBinder) binder).storePublicKey("dillon", kp.getPublic());
+        ((KeyService.KeyBinder) binder).storePublicKey("dillon", (RSAPublicKey) kp.getPublic());
         // Ensure partnersMap is not null after storing public key
         assertNotNull(KeyService.partnersMap);
 
         // Store same public key in local testPartnersMap and check that they're equal
-        testPartnersMap.put("dillon", kp.getPublic());
+        testPartnersMap.put("dillon", (RSAPublicKey) kp.getPublic());
         assertEquals(testPartnersMap, KeyService.partnersMap);
     }
 
     @Test
     public void canGetPublicKey() {
         // Store public key for a user
-        ((KeyService.KeyBinder) binder).storePublicKey("dillon", kp.getPublic());
+        ((KeyService.KeyBinder) binder).storePublicKey("dillon", (RSAPublicKey) kp.getPublic());
         // Ensure partnersMap is not null after storing public key
         assertNotNull(KeyService.partnersMap);
 
         // Check that you can get a partner's public key by their name
-        PublicKey pk = ((KeyService.KeyBinder) binder).getPublicKey("dillon");
+        RSAPublicKey pk = ((KeyService.KeyBinder) binder).getPublicKey("dillon");
         assertEquals(kp.getPublic(), pk);
     }
 
@@ -102,11 +102,11 @@ public class KeyServiceTest {
     @Test
     public void canResetPublicKey() {
         // Store public key for a user
-        ((KeyService.KeyBinder) binder).storePublicKey("dillon", kp.getPublic());
+        ((KeyService.KeyBinder) binder).storePublicKey("dillon", (RSAPublicKey) kp.getPublic());
         // Ensure partnersMap is not null after storing public key
         assertNotNull(KeyService.partnersMap);
         // Check that you can get a partner's public key by their name
-        PublicKey pk = ((KeyService.KeyBinder) binder).getPublicKey("dillon");
+        RSAPublicKey pk = ((KeyService.KeyBinder) binder).getPublicKey("dillon");
         assertEquals(kp.getPublic(), pk);
 
         // Reset partner's public key
@@ -118,7 +118,7 @@ public class KeyServiceTest {
     @Test
     public void canEncryptMessage() throws NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, UnsupportedEncodingException, InvalidKeyException {
         // Encrypt originalMessage
-        byte[] encryptedMsg = ((KeyService.KeyBinder) binder).encryptMessage(originalMessage, kp.getPublic());
+        byte[] encryptedMsg = ((KeyService.KeyBinder) binder).encryptMessage(originalMessage, (RSAPublicKey) kp.getPublic());
         System.out.println(Arrays.toString(encryptedMsg));
         // Ensure newly encrypted message is not null
         assertNotNull(encryptedMsg);
@@ -129,7 +129,7 @@ public class KeyServiceTest {
     @Test
     public void canDecryptMessage() throws NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, UnsupportedEncodingException, InvalidKeyException {
         // Encrypt originalMessage first
-        byte[] encryptedMsg = ((KeyService.KeyBinder) binder).encryptMessage(originalMessage, kp.getPublic());
+        byte[] encryptedMsg = ((KeyService.KeyBinder) binder).encryptMessage(originalMessage, (RSAPublicKey) kp.getPublic());
         System.out.println("Original message is: "+originalMessage);
         System.out.println("Encrypted message is: "+Arrays.toString(encryptedMsg));
         // Ensure newly encrypted message is not null
