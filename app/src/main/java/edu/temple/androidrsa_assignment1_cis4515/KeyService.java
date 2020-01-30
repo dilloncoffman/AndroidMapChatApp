@@ -58,7 +58,7 @@ public class KeyService extends Service {
         Store a key for a provided partner name
      */
     void storePublicKey (String partnerName, PublicKey publicKey) {
-        // store public key in partnersMap Hashtable
+        // store public key in partnersMap HashMap
         partnersMap.put(partnerName, publicKey);
     }
 
