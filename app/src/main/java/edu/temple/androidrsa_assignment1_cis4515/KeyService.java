@@ -88,11 +88,6 @@ public class KeyService extends Service {
             editor.putString("mainUserPrivateKey", myPrivateKey.toString()).commit();
             storePublicKey("mainUser", myPublicKey);
 
-            Map<String, ?> allEntries = prefs.getAll();
-            for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
-                Log.d("map values", entry.getKey() + ": " + entry.getValue().toString());
-            }
-
             return myKeyPair;
         } else {
             return myKeyPair;
