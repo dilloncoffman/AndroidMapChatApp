@@ -74,6 +74,9 @@ public class KeyServiceTest {
         assertNotNull(kp);
         assertNotNull(kp.getPrivate());
         assertNotNull(kp.getPublic());
+        assertNotNull(prefs.getString("myPrivateKey", ""));
+        assertNotNull(prefs.getString("myPublicKeyModulusForPublicKey", ""));
+        assertNotNull(prefs.getString("myPublicKeyExponentForPublicKey", ""));
     }
 
     @Test
