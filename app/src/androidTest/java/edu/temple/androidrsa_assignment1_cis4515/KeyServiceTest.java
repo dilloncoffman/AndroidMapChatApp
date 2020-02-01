@@ -35,7 +35,6 @@ import static org.junit.Assert.*;
 public class KeyServiceTest {
     private IBinder binder;
     private KeyPair kp;
-    private HashMap<String, RSAPublicKey> testPartnersMap = new HashMap<>();
     private String originalMessage = "hi there";
     private SharedPreferences prefs;
 

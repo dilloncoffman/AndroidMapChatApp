@@ -37,7 +37,6 @@ public class KeyService extends Service {
     private KeyFactory keyFactory = KeyFactory.getInstance("RSA");
     private String privateKeyString, publicKeyString;
     private KeyPair myKeyPair = null;
-    public static HashMap<String, RSAPublicKey> partnersMap = new HashMap<>();
     public static RSAPublicKey myPublicKey;
     public static RSAPrivateKey myPrivateKey;
     SharedPreferences prefs;
@@ -176,7 +175,7 @@ public class KeyService extends Service {
         // Erase partner's stored public key's modulus and exponent values so it can't be regenerated
         for (Map.Entry<String, ?> entry: prefs.getAll().entrySet()) {
             if (entry.getKey().contains(partnerName) && (entry.getKey().contains("Modulus") || entry.getKey().contains("Exponent"))) {
-                // Erase partner's key's modulus or exponent
+                // Erase partner's key's modulus and exponent
                 editor.putString(partnerName, "").commit();
             }
         }
