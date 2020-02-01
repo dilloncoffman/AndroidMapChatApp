@@ -1,9 +1,12 @@
 package edu.temple.androidrsa_assignment1_cis4515;
 
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import java.io.UnsupportedEncodingException;
@@ -21,6 +24,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -36,6 +40,16 @@ public class KeyService extends Service {
     public static HashMap<String, RSAPublicKey> partnersMap = new HashMap<>();
     public static RSAPublicKey myPublicKey;
     public static RSAPrivateKey myPrivateKey;
+    SharedPreferences prefs;
+    SharedPreferences.Editor editor;
+
+    @SuppressLint("CommitPrefEdits")
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        editor = prefs.edit();
+        return super.onStartCommand(intent, flags, startId);
+    }
 
     public KeyService() throws NoSuchAlgorithmException {
     }
@@ -79,22 +93,47 @@ public class KeyService extends Service {
     /*
         Store a key for a provided partner name
      */
-    void storeRSAPublicKey (String partnerName, RSAPublicKey publicKey) {
-        // store public key in partnersMap HashMap
-        partnersMap.put(partnerName, publicKey);
+    void storePublicKey (String partnerName, RSAPublicKey publicKey) {
+        // Store publicKey's exponent in order to convert the partner's public key back to RSAPublicKey on retrieval (RSAPublicKeySpec needs exponent)
+        String publicKeyExponent = publicKey.getPublicExponent().toString();
+        editor.putString(partnerName + "ExponentForPublicKey", publicKeyExponent); // add key-value to default SharedPreferences
+        // Need to store publicKey's modulus for this specific partner in order to convert the partner's public key back to RSAPublicKey on retrieval (RSAPublicKeySpec needs modulus)
+        String publicKeyModulus = publicKey.getModulus().toString();
+        editor.putString(partnerName + "ModulusForPublicKey", publicKeyModulus);
+        editor.commit(); // save key-value of partnerName and publicKeyExponent and of partnerName and publicKeyModulus
     }
 
     /*
         Returns the public key associated with the
         provided partner name
      */
-    public RSAPublicKey getRSAPublicKey(String partnerName) {
-        if (partnersMap.containsKey(partnerName)) {
-            return partnersMap.get(partnerName);
-        } else {
-            Log.d("KeyService", "Partner: "+partnerName+" does not exist in the partnersMap");
-            return null;
+    public RSAPublicKey getPublicKey(String partnerName) {
+        // Convert stored partner's publicKey string to RSAPublicKey, need public key's exponent and modulus to do so
+        String publicKeyModulus = null, publicKeyExponent = null;
+        // Make sure partnerName exists somewhere in what's stored
+        for (Map.Entry<String, ?> entry: prefs.getAll().entrySet()) {
+            if (entry.getKey().contains(partnerName) && entry.getKey().contains("Modulus")) {
+                // Get exponent for partner's public key
+                publicKeyModulus = (String) entry.getValue();
+            }
+            if (entry.getKey().contains(partnerName) && entry.getKey().contains("Exponent")) {
+                // Get exponent for partner's public key
+                publicKeyExponent = (String) entry.getValue();
+            }
         }
+
+        // Generate key from same exponent and modulus as original key
+        if (publicKeyExponent != null && publicKeyModulus != null) {
+            RSAPublicKeySpec pubKeySpec = new RSAPublicKeySpec(new BigInteger(publicKeyModulus), new BigInteger(publicKeyExponent));
+            try {
+                return (RSAPublicKey) keyFactory.generatePublic(pubKeySpec);
+            } catch (InvalidKeySpecException e) {
+                e.printStackTrace();
+            }
+        }
+
+        Log.d("KeyService", "Partner: "+partnerName+"may not have a public key stored to retrieve..");
+        return null;
     }
 
     /*
@@ -129,21 +168,13 @@ public class KeyService extends Service {
     /*
         Erases current public key for a specific partner
     */
-    public void resetRSAPublicKey(String partnerName) {
-        if (partnersMap.containsKey(partnerName)) {
-            myPublicKey = (RSAPublicKey) myKeyPair.getPublic();
-            publicKeyString = myPublicKey.getPublicExponent().toString();
-            RSAPublicKeySpec pubKeySpec = new RSAPublicKeySpec(myPublicKey.getModulus(), new BigInteger(publicKeyString));
-            try {
-                myPublicKey = (RSAPublicKey) keyFactory.generatePublic(pubKeySpec);
-            } catch (InvalidKeySpecException e) {
-                e.printStackTrace();
+    public void resetPublicKey(String partnerName) {
+        // Erase partner's stored public key's modulus and exponent values so it can't be regenerated
+        for (Map.Entry<String, ?> entry: prefs.getAll().entrySet()) {
+            if (entry.getKey().contains(partnerName) && (entry.getKey().contains("Modulus") || entry.getKey().contains("Exponent"))) {
+                // Erase partner's key's modulus or exponent
+                editor.putString(partnerName, "").commit();
             }
-            // Reset that partner's public key
-            partnersMap.replace(partnerName, myPublicKey);
-            myPublicKey = null;
-        } else {
-            Log.d("KeyService", "Partner: "+partnerName+" does not exist in the partnersMap");
         }
     }
 
@@ -183,7 +214,7 @@ public class KeyService extends Service {
             Store a key for a provided partner name
          */
         void storePublicKey (String partnerName, RSAPublicKey publicKey) {
-            KeyService.this.storeRSAPublicKey(partnerName, publicKey);
+            KeyService.this.storePublicKey(partnerName, publicKey);
         }
 
         /*
@@ -192,7 +223,7 @@ public class KeyService extends Service {
             TODO Update RSAPublicKey to return RSARSAPublicKey, see code gist of casting kp.getPrivate() and public() to (RSARSAPublicKey)
          */
         public RSAPublicKey getPublicKey(String partnerName) {
-            return KeyService.this.getRSAPublicKey(partnerName);
+            return KeyService.this.getPublicKey(partnerName);
         }
 
         /*
@@ -207,7 +238,7 @@ public class KeyService extends Service {
             TODO KeyFactory should allow you to reset just RSAPublicKey for this instance, see code gist
          */
         public void resetPublicKey(String partnerName) {
-            KeyService.this.resetRSAPublicKey(partnerName);
+            KeyService.this.resetPublicKey(partnerName);
         }
 
         /*

@@ -1,7 +1,9 @@
 package edu.temple.androidrsa_assignment1_cis4515;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import androidx.test.InstrumentationRegistry;
@@ -35,6 +37,7 @@ public class KeyServiceTest {
     private KeyPair kp;
     private HashMap<String, RSAPublicKey> testPartnersMap = new HashMap<>();
     private String originalMessage = "hi there";
+    private SharedPreferences prefs;
 
     @Rule
     public final ServiceTestRule mServiceRule = new ServiceTestRule();
@@ -54,6 +57,9 @@ public class KeyServiceTest {
 
         // Generate key pair in set up since we'll be using that same key pair for other test cases
         kp = ((KeyService.KeyBinder) binder).getMyKeyPair();
+
+        // SharedPreferences used to store partner's public keys
+        prefs = PreferenceManager.getDefaultSharedPreferences(InstrumentationRegistry.getTargetContext());
     }
 
     @After
@@ -72,22 +78,26 @@ public class KeyServiceTest {
 
     @Test
     public void canStorePublicKey() {
+        // Stores Dillon's public key's modulus and exponent in SharedPreferences as Strings
         ((KeyService.KeyBinder) binder).storePublicKey("dillon", (RSAPublicKey) kp.getPublic());
-        // Ensure partnersMap is not null after storing public key
-        assertNotNull(KeyService.partnersMap);
 
-        // Store same public key in local testPartnersMap and check that they're equal
-        testPartnersMap.put("dillon", (RSAPublicKey) kp.getPublic());
-        assertEquals(testPartnersMap, KeyService.partnersMap);
+        // Test String values of what partner's public key's modulus and exponent should be
+        String testPartnerPublicKeyExponent = ((RSAPublicKey) kp.getPublic()).getPublicExponent().toString();
+        String testPartnerPublicKeyModulus = ((RSAPublicKey) kp.getPublic()).getModulus().toString();
+
+        // Data in SharedPreferences after being stored
+        String storedPartnerPublicKeyExponent = prefs.getString("dillonExponentForPublicKey", testPartnerPublicKeyExponent);
+        String storedPartnerPublicKeyModulus = prefs.getString("dillonModulusForPublicKey", testPartnerPublicKeyExponent);
+
+        // Are the test values equal to what was actually stored in SharedPreferences?
+        assertEquals(testPartnerPublicKeyExponent, storedPartnerPublicKeyExponent);
+        assertEquals(testPartnerPublicKeyModulus, storedPartnerPublicKeyModulus);
     }
 
     @Test
     public void canGetPublicKey() {
-        // Store public key for a user
+        // Store public key for a user - really this entails storing their original key's modulus and exponent to be used to regenerate their key when a user requests it
         ((KeyService.KeyBinder) binder).storePublicKey("dillon", (RSAPublicKey) kp.getPublic());
-        // Ensure partnersMap is not null after storing public key
-        assertNotNull(KeyService.partnersMap);
-
         // Check that you can get a partner's public key by their name
         RSAPublicKey pk = ((KeyService.KeyBinder) binder).getPublicKey("dillon");
         assertEquals(kp.getPublic(), pk);
@@ -101,18 +111,15 @@ public class KeyServiceTest {
 
     @Test
     public void canResetPublicKey() {
-        // Store public key for a user
+        // Store test partner's public key
         ((KeyService.KeyBinder) binder).storePublicKey("dillon", (RSAPublicKey) kp.getPublic());
-        // Ensure partnersMap is not null after storing public key
-        assertNotNull(KeyService.partnersMap);
-        // Check that you can get a partner's public key by their name
-        RSAPublicKey pk = ((KeyService.KeyBinder) binder).getPublicKey("dillon");
-        assertEquals(kp.getPublic(), pk);
 
-        // Reset partner's public key
+        // Reset test partner's public key
         ((KeyService.KeyBinder) binder).resetPublicKey("dillon");
-        // Public key in KeyService should be null while kp.getPublic() should still have the same public key it did before it was reset
-        assertNotEquals(kp.getPublic(), KeyService.myPublicKey);
+
+        // Public key stored for test partner dillon should not be equal to current public key generated in KeyPair
+        assertNotEquals((((RSAPublicKey) kp.getPublic()).getPublicExponent()), prefs.getString("dillonExponentForPublicKey", ""));
+        assertNotEquals((((RSAPublicKey) kp.getPublic()).getModulus()), prefs.getString("dillonModulusForPublicKey", ""));
     }
 
     @Test
@@ -128,7 +135,7 @@ public class KeyServiceTest {
 
     @Test
     public void canDecryptMessage() throws NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, UnsupportedEncodingException, InvalidKeyException {
-        // Encrypt originalMessage first
+        // Encrypt originalMessage
         byte[] encryptedMsg = ((KeyService.KeyBinder) binder).encryptMessage(originalMessage, (RSAPublicKey) kp.getPublic());
         System.out.println("Original message is: "+originalMessage);
         System.out.println("Encrypted message is: "+Arrays.toString(encryptedMsg));
@@ -136,7 +143,6 @@ public class KeyServiceTest {
         assertNotNull(encryptedMsg);
         // Ensure encrypted message is not the same as the original message
         assertNotEquals(encryptedMsg, originalMessage);
-
         // Decrypt encrypted message and see if it matches original
         String decryptedMessage = ((KeyService.KeyBinder) binder).decryptMessage(encryptedMsg, kp.getPrivate());
         System.out.println("Decrypted message is: "+decryptedMessage);
