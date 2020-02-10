@@ -84,7 +84,9 @@ public class KeyService extends Service {
             }
 
             // Store keys for main user
-            editor.putString("mainUserPrivateKey", myPrivateKey.toString()).commit();
+            if (editor != null) {
+                editor.putString("mainUserPrivateKey", myPrivateKey.toString()).commit();
+            }
             storePublicKey("mainUser", myPublicKey);
 
             return myKeyPair;
@@ -99,11 +101,13 @@ public class KeyService extends Service {
     void storePublicKey (String partnerName, RSAPublicKey publicKey) {
         // Store publicKey's exponent in order to convert the partner's public key back to RSAPublicKey on retrieval (RSAPublicKeySpec needs exponent)
         String publicKeyExponent = publicKey.getPublicExponent().toString();
-        editor.putString(partnerName + "ExponentForPublicKey", publicKeyExponent); // add key-value to default SharedPreferences
-        // Need to store publicKey's modulus for this specific partner in order to convert the partner's public key back to RSAPublicKey on retrieval (RSAPublicKeySpec needs modulus)
-        String publicKeyModulus = publicKey.getModulus().toString();
-        editor.putString(partnerName + "ModulusForPublicKey", publicKeyModulus);
-        editor.commit(); // save key-value of partnerName and publicKeyExponent and of partnerName and publicKeyModulus
+        if (editor != null) {
+            editor.putString(partnerName + "ExponentForPublicKey", publicKeyExponent); // add key-value to default SharedPreferences
+            // Need to store publicKey's modulus for this specific partner in order to convert the partner's public key back to RSAPublicKey on retrieval (RSAPublicKeySpec needs modulus)
+            String publicKeyModulus = publicKey.getModulus().toString();
+            editor.putString(partnerName + "ModulusForPublicKey", publicKeyModulus);
+            editor.commit(); // save key-value of partnerName and publicKeyExponent and of partnerName and publicKeyModulus
+        }
     }
 
     /*
