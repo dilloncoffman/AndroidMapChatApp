@@ -4,7 +4,7 @@ android {
     compileSdkVersion 29
     buildToolsVersion "29.0.2"
     defaultConfig {
-        applicationId "edu.temple.androidrsa_assignment1_cis4515"
+        applicationId "edu.temple.mapchatapp"
         minSdkVersion 28
         targetSdkVersion 29
         versionCode 1

@@ -1,2 +1,2 @@
 include ':app'
-rootProject.name='AndroidRSA_Assignment1_CIS4515'
+rootProject.name='MapChatApp'

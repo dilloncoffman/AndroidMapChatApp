@@ -1,4 +1,4 @@
-package edu.temple.androidrsa_assignment1_cis4515;
+package edu.temple.mapchatapp;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -23,7 +23,6 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
-import java.util.HashMap;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -49,7 +48,7 @@ public class KeyServiceTest {
 
         // Create the service Intent
         Intent keyServiceIntent = new Intent(ApplicationProvider.getApplicationContext(),
-                KeyService.class);
+                edu.temple.mapchatapp.KeyService.class);
 
         // Bind the service and grab a reference to the binder to use in multiple test cases
         binder = mServiceRule.bindService(keyServiceIntent);

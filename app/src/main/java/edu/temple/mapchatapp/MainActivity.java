@@ -1,4 +1,4 @@
-package edu.temple.androidrsa_assignment1_cis4515;
+package edu.temple.mapchatapp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
