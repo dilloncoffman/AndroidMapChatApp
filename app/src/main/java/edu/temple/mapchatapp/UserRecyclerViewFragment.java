@@ -5,33 +5,29 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.ArrayList;
+
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link UserListFragment.OnFragmentInteractionListener} interface
+ * {@link UserRecyclerViewFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link UserListFragment#newInstance} factory method to
+ * Use the {@link UserRecyclerViewFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class UserListFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+public class UserRecyclerViewFragment extends Fragment {
+    private ArrayList<String> mUserNames = new ArrayList<>(); // TODO Get user names using Volley in Fragment with GET request OR use Volley in MainActivity and pass them to this fragment to use
 
     private OnFragmentInteractionListener mListener;
 
-    public UserListFragment() {
+    public UserRecyclerViewFragment() {
         // Required empty public constructor
     }
 
@@ -41,32 +37,37 @@ public class UserListFragment extends Fragment {
      *
      * @param param1 Parameter 1.
      * @param param2 Parameter 2.
-     * @return A new instance of fragment UserListFragment.
+     * @return A new instance of fragment UserRecyclerViewFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static UserListFragment newInstance(String param1, String param2) {
-        UserListFragment fragment = new UserListFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
+    public static UserRecyclerViewFragment newInstance(String param1, String param2) {
+        UserRecyclerViewFragment fragment = new UserRecyclerViewFragment();
+//        Bundle args = new Bundle();
+//        args.putString(ARG_PARAM1, param1);
+//        args.putString(ARG_PARAM2, param2);
+//        fragment.setArguments(args);
         return fragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+        // TODO getArguments from bundle set on fragment
+//        if (getArguments() != null) {
+//            mParam1 = getArguments().getString(ARG_PARAM1);
+//            mParam2 = getArguments().getString(ARG_PARAM2);
+//        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_user_list, container, false);
+        View view = inflater.inflate(R.layout.fragment_user_recycler_view, container, false);
+        RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.userNameRecyclerView);
+        UserRecyclerViewAdapter userRecyclerViewAdapter = new UserRecyclerViewAdapter(this, mUserNames);
+        recyclerView.setAdapter(userRecyclerViewAdapter);
+        return recyclerView;
     }
 
     // TODO: Rename method, update argument and hook method into UI event

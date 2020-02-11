@@ -42,8 +42,9 @@ public class MainActivity extends AppCompatActivity {
         keyIntent = new Intent(this, KeyService.class);
         Log.d("KeyService", "Bound to service connection");
         bindService(keyIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-        myKeyPair = keyBinder.getMyKeyPair(); // hold ref to user's keyPair
-
+        if (keyBinder != null) {
+            myKeyPair = keyBinder.getMyKeyPair(); // hold ref to user's keyPair
+        }
     }
 
     @Override
