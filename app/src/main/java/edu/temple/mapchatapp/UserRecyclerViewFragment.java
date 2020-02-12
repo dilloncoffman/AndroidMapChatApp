@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
@@ -24,7 +25,8 @@ import java.util.ArrayList;
 public class UserRecyclerViewFragment extends Fragment {
     private ArrayList<User> mUsers;
     private ArrayList<String> mUserNames = new ArrayList<>();
-    public final static String USERS_KEY = "users";
+    private final static String USERS_KEY = "users";
+    private static final String TAG = "UserRecyclerViewFragment";
 
 
     private OnUserSelectedInterface mListener;
@@ -69,9 +71,10 @@ public class UserRecyclerViewFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_user_recycler_view, container, false);
         RecyclerView recyclerView = view.findViewById(R.id.userNameRecyclerView);
-        UserRecyclerViewAdapter userRecyclerViewAdapter = new UserRecyclerViewAdapter((Context) mListener, mUserNames);
+        UserRecyclerViewAdapter userRecyclerViewAdapter = new UserRecyclerViewAdapter(getContext(), mUserNames);
         recyclerView.setAdapter(userRecyclerViewAdapter);
-        return recyclerView;
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        return view;
     }
 
     @Override

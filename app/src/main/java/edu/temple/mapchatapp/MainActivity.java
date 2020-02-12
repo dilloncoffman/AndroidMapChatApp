@@ -1,6 +1,7 @@
 package edu.temple.mapchatapp;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -10,15 +11,33 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.security.KeyPair;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements UserRecyclerViewFragment.OnUserSelectedInterface {
-    ArrayList<User> mUsers;
-
+    ArrayList<User> mUsers = new ArrayList<>();
     KeyPair myKeyPair;
     boolean mDoublePane;
+    Fragment containerUserRecyclerViewFragment;
+    Fragment containerMapFragment;
 
+    // Volley
+    private RequestQueue mQueue;
+    // Debug tag
+    private static final String TAG = "MainActivity";
+
+    // KeyService
     boolean connected;
     Intent keyIntent;
     KeyService.KeyBinder keyBinder;
@@ -51,15 +70,12 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
         }
 
         if (findViewById(R.id.fragment_map_container) != null) {
-            // The map container view will be present only in the
-            // large-screen layouts (res/values-w900dp).
-            // If this view is present, then the
-            // activity should be in two-pane mode.
+
             mDoublePane = true;
         }
 
         // TODO Fetch users using Volley and pass them to UserRecyclerViewFragment after attaching that fragment to it's container
-
+        fetchUsers();
     }
 
     @Override
@@ -84,5 +100,57 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
             else
                 Launch UserDetailActivity that then has a MapFragment
          */
+    }
+
+    public void fetchUsers() {
+        mQueue = Volley.newRequestQueue(this);
+
+        String usersUrl = "https://kamorris.com/lab/get_locations.php";
+
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, usersUrl, null,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        for (int i = 0; i < response.length(); i++) {
+                            try {
+                                JSONObject user = response.getJSONObject(i);
+                                // Create User using JSONArray
+                                User newUser = new User(
+                                        user.getString("username"),
+                                        Double.parseDouble(user.getString("latitude")),
+                                        Double.parseDouble(user.getString("longitude"))
+                                );
+                                Log.d(TAG, "onResponse: " + newUser.toString());
+                                // Add newUser to ArrayList<User> mUsers
+                                mUsers.add(newUser);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        // Get reference to fragment containers
+                        containerUserRecyclerViewFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_user_list_container);
+                        containerMapFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_map_container);
+                        // The map container view will be present only in the large-screen layouts (res/values-w900dp).
+                        // If fragment_map_container is present, then the activity should be in two-pane mode.
+                        mDoublePane = (findViewById(R.id.fragment_map_container) != null);
+                        Log.d(TAG, "onCreate: mDoublePane is " + mDoublePane);
+
+                        if (containerUserRecyclerViewFragment == null && !mDoublePane) {
+                            // App opened in portrait mode
+                            Log.d("App opened in portrait mode. Double pane should be false == ", String.valueOf(mDoublePane));
+                            getSupportFragmentManager()
+                                    .beginTransaction()
+                                    .add(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers))
+                                    .commit();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        });
+
+        mQueue.add(request);
     }
 }

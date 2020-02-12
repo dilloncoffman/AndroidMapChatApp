@@ -3,8 +3,6 @@ package edu.temple.mapchatapp;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import java.security.interfaces.RSAPublicKey;
-
 /**
  * Created by dilloncoffman on 2020-02-11
  */
@@ -13,7 +11,7 @@ public class User implements Comparable, Parcelable {
     private double latitude;
     private double longitude;
 
-    public User (String name, double latitude, double longitude, RSAPublicKey publicKey) {
+    public User (String name, double latitude, double longitude) {
         this.name = name;
         this.latitude = latitude;
         this.longitude = longitude;
@@ -76,5 +74,14 @@ public class User implements Comparable, Parcelable {
         parcel.writeString(name);
         parcel.writeDouble(latitude);
         parcel.writeDouble(longitude);
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "name='" + name + '\'' +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
+                '}';
     }
 }
