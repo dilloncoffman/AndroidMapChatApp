@@ -1,6 +1,8 @@
 package edu.temple.mapchatapp;
 
 import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,20 +15,28 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
-
 /**
  * Created by dilloncoffman on 2020-02-10
  */
 public class UserRecyclerViewAdapter extends RecyclerView.Adapter<UserRecyclerViewAdapter.ViewHolder> {
 
+    private MainActivity mParentActivity;
+    private Context mContext;
+    private ArrayList<User> mUsers;
+    private boolean mDoublePane;
+    private final View.OnClickListener mOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+
+        }
+    };
     private static final String TAG = "UserRecyclerViewAdapter"; // TAG for debugging
 
-    private ArrayList<String> mUserNames;
-    private Context mContext;
-
-    public UserRecyclerViewAdapter(Context context, ArrayList<String> userNames) {
+    public UserRecyclerViewAdapter(MainActivity parent, Context context, ArrayList<User> users, boolean doublePane) {
+        this.mParentActivity = parent;
         this.mContext = context;
-        this.mUserNames = userNames;
+        this.mUsers = users;
+        this.mDoublePane = doublePane;
     }
 
     /*
@@ -35,9 +45,9 @@ public class UserRecyclerViewAdapter extends RecyclerView.Adapter<UserRecyclerVi
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(mContext).inflate(R.layout.user_list_item, parent, false);
-        ViewHolder viewHolder = new ViewHolder(view);
-        return viewHolder;
+        View view = LayoutInflater.from(mContext)
+                .inflate(R.layout.user_list_item, parent, false);
+        return new ViewHolder(view);
     }
 
     /*
@@ -47,24 +57,41 @@ public class UserRecyclerViewAdapter extends RecyclerView.Adapter<UserRecyclerVi
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         Log.d(TAG, "onBindViewHolder: called.");
         // Set user names
-        holder.userName.setText(mUserNames.get(position));
+        holder.userName.setText(mUsers.get(position).getName());
+        holder.itemView.setTag(mUsers.get(position));
         // Set click listener for each item in user recycler view
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG, "onClick: clicked on: " + mUserNames.get(position));
-                Toast.makeText(mContext, mUserNames.get(position), Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "onClick: clicked on: " + mUsers.get(position).getName());
+                User userClicked = (User) view.getTag();
+                if (mDoublePane) {
+                    Bundle arguments = new Bundle();
+                    arguments.putParcelable(MapFragment.ARG_USER, userClicked);
+                    MapFragment mapFragment = new MapFragment();
+                    mapFragment.setArguments(arguments);
+                    mParentActivity.getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.fragment_map_container, mapFragment)
+                            .commit();
+                } else {
+                    Context context = view.getContext();
+                    Intent intent = new Intent(context, UserDetailActivity.class);
+                    intent.putExtra(MapFragment.ARG_USER, userClicked);
+
+                    context.startActivity(intent);
+                }
+                Toast.makeText(mContext, mUsers.get(position).getName(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        return mUserNames.size();
+        return mUsers.size();
     }
 
     // Holds widgets in memory for each recycler view entry
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView userName;
         RelativeLayout parentLayout;
@@ -76,5 +103,4 @@ public class UserRecyclerViewAdapter extends RecyclerView.Adapter<UserRecyclerVi
             parentLayout = itemView.findViewById(R.id.parent_layout);
         }
     }
-
 }

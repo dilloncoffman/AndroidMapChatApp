@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -25,7 +26,7 @@ import org.json.JSONObject;
 import java.security.KeyPair;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements UserRecyclerViewFragment.OnUserSelectedInterface {
+public class MainActivity extends AppCompatActivity implements UserRecyclerViewFragment.OnUserSelectedInterface, MapFragment.OnFragmentInteractionListener {
     ArrayList<User> mUsers = new ArrayList<>();
     KeyPair myKeyPair;
     boolean mDoublePane;
@@ -75,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
         }
 
         // TODO Fetch users using Volley and pass them to UserRecyclerViewFragment after attaching that fragment to it's container
+        // TODO Fetch users and update map every 30 seconds
         fetchUsers();
     }
 
@@ -133,16 +135,46 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
                         // The map container view will be present only in the large-screen layouts (res/values-w900dp).
                         // If fragment_map_container is present, then the activity should be in two-pane mode.
                         mDoublePane = (findViewById(R.id.fragment_map_container) != null);
-                        Log.d(TAG, "onCreate: mDoublePane is " + mDoublePane);
+
+                        // TODO sort users by distance from the currentUser
+                        // TODO list of users should be updated every 30 seconds
 
                         if (containerUserRecyclerViewFragment == null && !mDoublePane) {
                             // App opened in portrait mode
-                            Log.d("App opened in portrait mode. Double pane should be false == ", String.valueOf(mDoublePane));
                             getSupportFragmentManager()
                                     .beginTransaction()
-                                    .add(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers))
+                                    .add(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers, mDoublePane))
+                                    .commit();
+                        } else if (containerUserRecyclerViewFragment == null) {
+                            // App opened in landscape mode
+                            getSupportFragmentManager()
+                                    .beginTransaction()
+                                    .replace(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers, mDoublePane))
                                     .commit();
                         }
+
+                        // Handle portrait to landscape and vice versa orientation changes
+                        // from landscape to portrait
+                        if (containerUserRecyclerViewFragment instanceof UserRecyclerViewFragment && !mDoublePane) {
+                            if (((UserRecyclerViewFragment) containerUserRecyclerViewFragment).getUsers() != null) {
+                                mUsers = ((UserRecyclerViewFragment) containerUserRecyclerViewFragment).getUsers();
+                                mDoublePane = (findViewById(R.id.fragment_map_container) != null);
+                                getSupportFragmentManager()
+                                        .beginTransaction()
+                                        .replace(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers, mDoublePane))
+                                        .commit();
+                            }
+                        } else if (containerUserRecyclerViewFragment instanceof UserRecyclerViewFragment && mDoublePane) {
+                            Log.d("Went from portrait to landscape. Double pane should be true == ", String.valueOf(mDoublePane));
+                            if (containerUserRecyclerViewFragment != null && ((UserRecyclerViewFragment) containerUserRecyclerViewFragment).getUsers() != null) {
+                                mUsers = ((UserRecyclerViewFragment) containerUserRecyclerViewFragment).getUsers();
+                                getSupportFragmentManager()
+                                        .beginTransaction()
+                                        .replace(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers, mDoublePane))
+                                        .commit();
+                            }
+                        }
+
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -152,5 +184,10 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
         });
 
         mQueue.add(request);
+    }
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
     }
 }

@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,9 +25,11 @@ import java.util.ArrayList;
  */
 public class UserRecyclerViewFragment extends Fragment {
     private ArrayList<User> mUsers;
-    private ArrayList<String> mUserNames = new ArrayList<>();
     private final static String USERS_KEY = "users";
+    private final static String DOUBLE_PANE_KEY = "doublePane";
+
     private static final String TAG = "UserRecyclerViewFragment";
+    private boolean mDoublePane;
 
 
     private OnUserSelectedInterface mListener;
@@ -42,10 +45,11 @@ public class UserRecyclerViewFragment extends Fragment {
      * @param users ArrayList<User>.
      * @return A new instance of fragment UserRecyclerViewFragment.
      */
-    public static UserRecyclerViewFragment newInstance(ArrayList<User> users) {
+    public static UserRecyclerViewFragment newInstance(ArrayList<User> users, boolean doublePane) {
         UserRecyclerViewFragment userRecyclerViewFragment = new UserRecyclerViewFragment();
         Bundle args = new Bundle();
         args.putParcelableArrayList(USERS_KEY, users);
+        args.putBoolean(DOUBLE_PANE_KEY, doublePane);
         userRecyclerViewFragment.setArguments(args);
         return userRecyclerViewFragment;
     }
@@ -56,13 +60,9 @@ public class UserRecyclerViewFragment extends Fragment {
         Bundle args = getArguments();
         if (args != null) {
             mUsers = args.getParcelableArrayList(USERS_KEY);
+            mDoublePane = args.getBoolean(DOUBLE_PANE_KEY);
         }
-        // Get all user names to be used for UserRecyclerViewAdapter list items
-        if (mUsers != null) {
-            for (int i = 0; i < mUsers.size(); i++) {
-                mUserNames.add(mUsers.get(i).getName());
-            }
-        }
+        Log.d(TAG, "onCreate: mDoublePane in Fragment is: " + mDoublePane);
     }
 
     @Override
@@ -71,7 +71,8 @@ public class UserRecyclerViewFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_user_recycler_view, container, false);
         RecyclerView recyclerView = view.findViewById(R.id.userNameRecyclerView);
-        UserRecyclerViewAdapter userRecyclerViewAdapter = new UserRecyclerViewAdapter(getContext(), mUserNames);
+        // TODO Update double pane for fragment, if user
+        UserRecyclerViewAdapter userRecyclerViewAdapter = new UserRecyclerViewAdapter((MainActivity) getActivity(), getContext(), mUsers, mDoublePane);
         recyclerView.setAdapter(userRecyclerViewAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         return view;
@@ -106,5 +107,9 @@ public class UserRecyclerViewFragment extends Fragment {
      */
     public interface OnUserSelectedInterface {
         void userSelected(int position);
+    }
+
+    public ArrayList<User> getUsers() {
+        return this.mUsers;
     }
 }
