@@ -6,7 +6,7 @@
     android:layout_height="match_parent">
 
     <FrameLayout
-        android:id="@+id/fragment_user_list"
+        android:id="@+id/fragment_user_list_container"
         android:layout_width="202dp"
         android:layout_height="match_parent"
         android:layout_marginStart="1dp"
@@ -15,7 +15,7 @@
     </FrameLayout>
 
     <FrameLayout
-        android:id="@+id/fragment_map"
+        android:id="@+id/fragment_map_container"
         android:layout_width="530dp"
         android:layout_height="325dp"
         app:layout_constraintBottom_toBottomOf="parent"

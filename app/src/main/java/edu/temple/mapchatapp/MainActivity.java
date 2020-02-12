@@ -11,9 +11,13 @@ import android.os.IBinder;
 import android.util.Log;
 
 import java.security.KeyPair;
+import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements UserRecyclerViewFragment.OnUserSelectedInterface {
+    ArrayList<User> mUsers;
+
     KeyPair myKeyPair;
+    boolean mDoublePane;
 
     boolean connected;
     Intent keyIntent;
@@ -45,6 +49,17 @@ public class MainActivity extends AppCompatActivity {
         if (keyBinder != null) {
             myKeyPair = keyBinder.getMyKeyPair(); // hold ref to user's keyPair
         }
+
+        if (findViewById(R.id.fragment_map_container) != null) {
+            // The map container view will be present only in the
+            // large-screen layouts (res/values-w900dp).
+            // If this view is present, then the
+            // activity should be in two-pane mode.
+            mDoublePane = true;
+        }
+
+        // TODO Fetch users using Volley and pass them to UserRecyclerViewFragment after attaching that fragment to it's container
+
     }
 
     @Override
@@ -54,5 +69,20 @@ public class MainActivity extends AppCompatActivity {
         // Unbind from KeyService
         Log.d("KeyService", "Unbound from service connection");
         unbindService(serviceConnection);
+    }
+
+    @Override
+    public void userSelected(int position) {
+        User user = mUsers.get(position);
+
+        // TODO if doublePane
+        /*
+            Add user to bundle to be passed to MapFragment???
+            What should MapFragment have in it or really be doing?
+         */
+        /*
+            else
+                Launch UserDetailActivity that then has a MapFragment
+         */
     }
 }
