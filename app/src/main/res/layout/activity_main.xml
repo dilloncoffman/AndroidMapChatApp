@@ -8,11 +8,32 @@
 
     <FrameLayout
         android:id="@+id/fragment_user_list_container"
-        android:layout_width="409dp"
+        android:layout_width="match_parent"
         android:layout_height="574dp"
-        android:layout_marginTop="160dp"
+        android:layout_marginTop="37dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-    </FrameLayout>
+        app:layout_constraintTop_toBottomOf="@+id/submitBtn"></FrameLayout>
+
+    <EditText
+        android:id="@+id/userNameInput"
+        android:layout_width="359dp"
+        android:layout_height="43dp"
+        android:layout_marginTop="16dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="Enter a username for yourself"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/submitBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Submit"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/userNameInput" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

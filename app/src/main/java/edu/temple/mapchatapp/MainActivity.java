@@ -11,6 +11,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -28,10 +31,14 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements UserRecyclerViewFragment.OnUserSelectedInterface, MapFragment.OnFragmentInteractionListener {
     ArrayList<User> mUsers = new ArrayList<>();
+    User currentUser;
     KeyPair myKeyPair;
     boolean mDoublePane;
     Fragment containerUserRecyclerViewFragment;
     Fragment containerMapFragment;
+    EditText userInput;
+    Button submitBtn;
+
 
     // Volley
     private RequestQueue mQueue;
@@ -70,12 +77,29 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
             myKeyPair = keyBinder.getMyKeyPair(); // hold ref to user's keyPair
         }
 
-        if (findViewById(R.id.fragment_map_container) != null) {
+        userInput = findViewById(R.id.userNameInput);
+        submitBtn = findViewById(R.id.submitBtn);
 
+        if (findViewById(R.id.fragment_map_container) != null) {
             mDoublePane = true;
         }
 
-        // TODO Fetch users using Volley and pass them to UserRecyclerViewFragment after attaching that fragment to it's container
+        submitBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String postUrl = "https://kamorris.com/lab/register_location.php";
+
+                // Get currentUser's location using device permission
+
+                // Construct currentUser object
+                currentUser = new User(userInput.getText().toString(), 1.0, 1.0);
+                // POST to endpoint using Volley and currentUser
+
+                // Fetch list of new users
+                fetchUsers();
+            }
+        });
+
         // TODO Fetch users and update map every 30 seconds
         fetchUsers();
     }
