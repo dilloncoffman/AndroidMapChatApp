@@ -6,9 +6,9 @@
     tools:context=".UserRecyclerViewFragment">
 
     <androidx.recyclerview.widget.RecyclerView
-        tools:listitem="@layout/user_list_item"
         android:id="@+id/userNameRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="464dp"
+        tools:listitem="@layout/user_list_item" />
 
 </FrameLayout>
