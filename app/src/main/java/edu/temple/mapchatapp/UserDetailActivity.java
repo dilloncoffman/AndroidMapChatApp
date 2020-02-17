@@ -31,10 +31,15 @@ public class UserDetailActivity extends AppCompatActivity implements MapFragment
             Bundle arguments = new Bundle();
             arguments.putParcelable(MapFragment.ARG_USER,
                     getIntent().getParcelableExtra(MapFragment.ARG_USER));
+            arguments.putParcelableArrayList("users", getIntent().getParcelableArrayListExtra("users"));
             MapFragment mapFragment = new MapFragment();
             mapFragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.fragment_map_container, mapFragment)
+                    .add(R.id.fragment_map_container,
+                            MapFragment.newInstance(
+                                    getIntent().getParcelableExtra(MapFragment.ARG_USER),
+                                    getIntent().<User>getParcelableArrayListExtra("users"),
+                                    getIntent().getBooleanExtra("doublePane", false)))
                     .commit();
         }
     }

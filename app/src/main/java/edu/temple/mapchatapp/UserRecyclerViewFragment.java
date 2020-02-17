@@ -43,6 +43,7 @@ public class UserRecyclerViewFragment extends Fragment {
      * this fragment using the provided parameters.
      *
      * @param users ArrayList<User>.
+     * @param doublePane boolean.
      * @return A new instance of fragment UserRecyclerViewFragment.
      */
     public static UserRecyclerViewFragment newInstance(ArrayList<User> users, boolean doublePane) {
@@ -71,7 +72,6 @@ public class UserRecyclerViewFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_user_recycler_view, container, false);
         RecyclerView recyclerView = view.findViewById(R.id.userNameRecyclerView);
-        // TODO Update double pane for fragment, if user
         UserRecyclerViewAdapter userRecyclerViewAdapter = new UserRecyclerViewAdapter((MainActivity) getActivity(), getContext(), mUsers, mDoublePane);
         recyclerView.setAdapter(userRecyclerViewAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));

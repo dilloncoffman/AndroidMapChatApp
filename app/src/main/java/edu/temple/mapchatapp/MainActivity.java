@@ -204,9 +204,7 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
                 // If fragment_map_container is present, then the activity should be in two-pane mode.
                 mDoublePane = (findViewById(R.id.fragment_map_container) != null);
 
-                // TODO sort users by distance from the currentUser
-
-                // TODO list of users should be updated every 30 seconds - fetchUsers(users)
+                // TODO sort users by distance from the currentUser in UserRecyclerViewFragment
 
                 if (containerUserRecyclerViewFragment == null && !mDoublePane) {
                     // App opened in portrait mode
@@ -219,6 +217,7 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
                     getSupportFragmentManager()
                             .beginTransaction()
                             .replace(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers, mDoublePane))
+//                            .replace(R.id.fragment_map_container, MapFragment.newInstance(currentUser, mUsers, mDoublePane))
                             .commitAllowingStateLoss();
                 }
 
@@ -283,8 +282,6 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
 
                         // TODO sort users by distance from the currentUser
 
-                        // TODO list of users should be updated every 30 seconds - fetchUsers(users)
-
                         if (containerUserRecyclerViewFragment == null && !mDoublePane) {
                             // App opened in portrait mode
                             getSupportFragmentManager()
@@ -296,6 +293,7 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
                             getSupportFragmentManager()
                                     .beginTransaction()
                                     .replace(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers, mDoublePane))
+//                                    .replace(R.id.fragment_map_container, MapFragment.newInstance(currentUser, mUsers, mDoublePane))
                                     .commitAllowingStateLoss();
                         }
 
@@ -308,9 +306,9 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
                                 getSupportFragmentManager()
                                         .beginTransaction()
                                         .replace(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers, mDoublePane))
-                                        .commit();
+                                        .commitAllowingStateLoss();
                             }
-                        } else if (containerUserRecyclerViewFragment instanceof UserRecyclerViewFragment && mDoublePane) {
+                        } else if (containerUserRecyclerViewFragment instanceof UserRecyclerViewFragment) {
                             Log.d("Went from portrait to landscape. Double pane should be true == ", String.valueOf(mDoublePane));
                             if (containerUserRecyclerViewFragment != null && ((UserRecyclerViewFragment) containerUserRecyclerViewFragment).getUsers() != null) {
                                 mUsers = ((UserRecyclerViewFragment) containerUserRecyclerViewFragment).getUsers();
@@ -326,6 +324,11 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
                 handler.postDelayed(this, fetchInterval);
             }
         }, fetchInterval);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
     }
 
     @Override

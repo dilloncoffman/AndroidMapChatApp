@@ -63,7 +63,6 @@ public class UserRecyclerViewAdapter extends RecyclerView.Adapter<UserRecyclerVi
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG, "onClick: clicked on: " + mUsers.get(position).getName());
                 User userClicked = (User) view.getTag();
                 if (mDoublePane) {
                     Bundle arguments = new Bundle();
@@ -71,12 +70,14 @@ public class UserRecyclerViewAdapter extends RecyclerView.Adapter<UserRecyclerVi
                     MapFragment mapFragment = new MapFragment();
                     mapFragment.setArguments(arguments);
                     mParentActivity.getSupportFragmentManager().beginTransaction()
-                            .replace(R.id.fragment_map_container, mapFragment)
+                            .replace(R.id.fragment_map_container, MapFragment.newInstance(userClicked, mUsers, mDoublePane))
                             .commit();
                 } else {
                     Context context = view.getContext();
                     Intent intent = new Intent(context, UserDetailActivity.class);
                     intent.putExtra(MapFragment.ARG_USER, userClicked);
+                    intent.putExtra("users", mUsers);
+                    intent.putExtra("doublePane", mDoublePane);
 
                     context.startActivity(intent);
                 }
