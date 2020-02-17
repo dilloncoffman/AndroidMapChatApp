@@ -63,16 +63,24 @@ public class UserRecyclerViewAdapter extends RecyclerView.Adapter<UserRecyclerVi
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+                // The map container view will be present only in the large-screen layouts (res/values-w900dp).
+                // If fragment_map_container is present, then the activity should be in two-pane mode.
+                mDoublePane = (mParentActivity.findViewById(R.id.fragment_map_container) != null);
+
                 User userClicked = (User) view.getTag();
                 if (mDoublePane) {
+                    Log.d(TAG, "onClick: mDoublePane in UserAdapter is: " + true);
                     Bundle arguments = new Bundle();
                     arguments.putParcelable(MapFragment.ARG_USER, userClicked);
                     MapFragment mapFragment = new MapFragment();
                     mapFragment.setArguments(arguments);
+                    Log.d(TAG, "onClick: Adapter: doublePane is" + mDoublePane);
                     mParentActivity.getSupportFragmentManager().beginTransaction()
                             .replace(R.id.fragment_map_container, MapFragment.newInstance(userClicked, mUsers, mDoublePane))
                             .commit();
                 } else {
+                    Log.d(TAG, "onClick: mDoublePane in UserAdapter is: " + false);
                     Context context = view.getContext();
                     Intent intent = new Intent(context, UserDetailActivity.class);
                     intent.putExtra(MapFragment.ARG_USER, userClicked);

@@ -328,12 +328,12 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
                                     getSupportFragmentManager()
                                             .beginTransaction()
                                             .replace(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers, mDoublePane))
-//                                    .replace(R.id.fragment_map_container, MapFragment.newInstance(currentUser, mUsers, mDoublePane))
+                                            .replace(R.id.fragment_map_container, MapFragment.newInstance(currentUser, mUsers, mDoublePane))
                                             .commitAllowingStateLoss();
                                 }
 
                                 // Handle portrait to landscape and vice versa orientation changes
-                                // from landscape to portrait
+                                // From landscape to portrait
                                 if (containerUserRecyclerViewFragment instanceof UserRecyclerViewFragment && !mDoublePane) {
                                     if (((UserRecyclerViewFragment) containerUserRecyclerViewFragment).getUsers() != null) {
                                         mUsers = ((UserRecyclerViewFragment) containerUserRecyclerViewFragment).getUsers();
