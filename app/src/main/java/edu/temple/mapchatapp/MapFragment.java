@@ -142,7 +142,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 if (marker == null) {
                     marker = googleMap.addMarker(new MarkerOptions()
                             .position(latLng)
-                            .title(mCurrentUser.getName() + "'s Current Location") // all setter methods don't have 'set' in their names with Google Maps Android SDK
+                            .title(mCurrentUser.getName() + "'s Current Location")
                     );
                     myMarkers.put(latLng.toString(), marker);
                 } else {
@@ -154,6 +154,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         } else {
             Log.d(TAG, "onMapReady: currentUser was null");
         }
+
         if (mUsers != null) {
             Log.d(TAG, "onMapReady: mUsers are not null");
             if (googleMap != null) {

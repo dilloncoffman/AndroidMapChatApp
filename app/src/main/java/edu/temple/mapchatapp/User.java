@@ -6,15 +6,18 @@ import android.os.Parcelable;
 /**
  * Created by dilloncoffman on 2020-02-11
  */
-public class User implements Comparable, Parcelable {
+public class User implements Comparable<User>, Parcelable {
+    private static final String TAG = "User";
     private String name;
     private double latitude;
     private double longitude;
+    private float distanceToCurrentUser;
 
-    public User (String name, double latitude, double longitude) {
+    public User (String name, double latitude, double longitude, float distanceToCurrentUser) {
         this.name = name;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.distanceToCurrentUser = distanceToCurrentUser;
     }
 
     protected User(Parcel in) {
@@ -34,11 +37,6 @@ public class User implements Comparable, Parcelable {
             return new User[size];
         }
     };
-
-    @Override
-    public int compareTo(Object o) {
-        return 0;
-    }
 
     public String getName() {
         return name;
@@ -83,5 +81,14 @@ public class User implements Comparable, Parcelable {
                 ", latitude=" + latitude +
                 ", longitude=" + longitude +
                 '}';
+    }
+
+    @Override
+    public int compareTo(User user) {
+        if (this.distanceToCurrentUser > user.distanceToCurrentUser) {
+            return 1;
+        } else {
+            return -1;
+        }
     }
 }

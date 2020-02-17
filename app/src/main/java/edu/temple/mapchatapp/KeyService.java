@@ -226,7 +226,6 @@ public class KeyService extends Service {
         /*
             Returns the public key associated with the
             provided partner name
-            TODO Update RSAPublicKey to return RSARSAPublicKey, see code gist of casting kp.getPrivate() and public() to (RSARSAPublicKey)
          */
         public RSAPublicKey getPublicKey(String partnerName) {
             return KeyService.this.getPublicKey(partnerName);
@@ -241,7 +240,6 @@ public class KeyService extends Service {
 
         /*
             Erases current public key for a specific partner
-            TODO KeyFactory should allow you to reset just RSAPublicKey for this instance, see code gist
          */
         public void resetPublicKey(String partnerName) {
             KeyService.this.resetPublicKey(partnerName);

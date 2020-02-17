@@ -38,13 +38,14 @@ import org.json.JSONObject;
 
 import java.security.KeyPair;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements UserRecyclerViewFragment.OnUserSelectedInterface, MapFragment.OnFragmentInteractionListener, VolleyCallback {
     ArrayList<User> mUsers = new ArrayList<>();
-    User currentUser = new User("notARealUser", 10.0, 10.0);
+    User currentUser = new User("notARealUser", 10.0, 10.0, 0);
     KeyPair myKeyPair;
     boolean mDoublePane;
     Fragment containerUserRecyclerViewFragment;
@@ -123,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
                 locationB.setLongitude(currentUser.getLongitude());
                 if (locationA.distanceTo(locationB) > 10 && !(currentUser.getName().equals("notARealUser") || currentUser.getName().equals(""))) { // distanceTo returns distance in meters
                     try {
-                         postUser(currentUser);
+                        postUser(currentUser);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -161,7 +162,7 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
                 if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     return;
                 }
-                currentUser = new User(userInput.getText().toString(), Objects.requireNonNull(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)).getLatitude(), Objects.requireNonNull(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)).getLongitude());
+                currentUser = new User(userInput.getText().toString(), Objects.requireNonNull(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)).getLatitude(), Objects.requireNonNull(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)).getLongitude(), 0);
 
                 // Set user's name with what was in text input
                 Log.d(TAG, "onClick: " + currentUser.toString());
@@ -175,104 +176,47 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
                     }
                 }
 
-            }
-        });
-
-        fetchUsers(new VolleyCallback() {
-            @Override
-            public void onSuccess(JSONArray response) {
-                for (int i = 0; i < response.length(); i++) {
-                    try {
-                        JSONObject user = response.getJSONObject(i);
-                        // Create User using JSONArray
-                        User newUser = new User(
-                                user.getString("username"),
-                                Double.parseDouble(user.getString("latitude")),
-                                Double.parseDouble(user.getString("longitude"))
-                        );
-                        Log.d(TAG, "onResponse: " + newUser.toString());
-                        // Add newUser to ArrayList<User> mUsers
-                        mUsers.add(newUser);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-                // Get reference to fragment containers
-                containerUserRecyclerViewFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_user_list_container);
-                containerMapFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_map_container);
-                // The map container view will be present only in the large-screen layouts (res/values-w900dp).
-                // If fragment_map_container is present, then the activity should be in two-pane mode.
-                mDoublePane = (findViewById(R.id.fragment_map_container) != null);
-
-                // TODO sort users by distance from the currentUser in UserRecyclerViewFragment
-
-                if (containerUserRecyclerViewFragment == null && !mDoublePane) {
-                    // App opened in portrait mode
-                    getSupportFragmentManager()
-                            .beginTransaction()
-                            .add(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers, mDoublePane))
-                            .commitAllowingStateLoss();
-                } else if (containerUserRecyclerViewFragment == null) {
-                    // App opened in landscape mode
-                    getSupportFragmentManager()
-                            .beginTransaction()
-                            .replace(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers, mDoublePane))
-//                            .replace(R.id.fragment_map_container, MapFragment.newInstance(currentUser, mUsers, mDoublePane))
-                            .commitAllowingStateLoss();
-                }
-
-                // Handle portrait to landscape and vice versa orientation changes
-                // from landscape to portrait
-                if (containerUserRecyclerViewFragment instanceof UserRecyclerViewFragment && !mDoublePane) {
-                    if (((UserRecyclerViewFragment) containerUserRecyclerViewFragment).getUsers() != null) {
-                        mUsers = ((UserRecyclerViewFragment) containerUserRecyclerViewFragment).getUsers();
-                        mDoublePane = (findViewById(R.id.fragment_map_container) != null);
-                        getSupportFragmentManager()
-                                .beginTransaction()
-                                .replace(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers, mDoublePane))
-                                .commit();
-                    }
-                } else if (containerUserRecyclerViewFragment instanceof UserRecyclerViewFragment && mDoublePane) {
-                    Log.d("Went from portrait to landscape. Double pane should be true == ", String.valueOf(mDoublePane));
-                    if (containerUserRecyclerViewFragment != null && ((UserRecyclerViewFragment) containerUserRecyclerViewFragment).getUsers() != null) {
-                        mUsers = ((UserRecyclerViewFragment) containerUserRecyclerViewFragment).getUsers();
-                        getSupportFragmentManager()
-                                .beginTransaction()
-                                .replace(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers, mDoublePane))
-                                .commit();
-                    }
-                }
-            }
-        });
-
-        // Fetch list of users every 30 seconds
-        handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
                 if (mUsers.size() > 0) {
                     mUsers.clear();
                 }
-                Log.d(TAG, "run: Fetched new list of users");
+
                 fetchUsers(new VolleyCallback() {
                     @Override
                     public void onSuccess(JSONArray response) {
                         for (int i = 0; i < response.length(); i++) {
                             try {
+
                                 JSONObject user = response.getJSONObject(i);
+                                // Get distance between currentUser and user
+                                Location locationA = new Location("Location A"); // User's last known location
+                                locationA.setLatitude(Objects.requireNonNull(currentUser).getLatitude());
+                                locationA.setLongitude(Objects.requireNonNull(currentUser).getLongitude());
+                                Location locationB = new Location("Location B"); // User's current location
+                                locationB.setLatitude(Double.parseDouble(user.getString("latitude")));
+                                locationB.setLongitude(Double.parseDouble(user.getString("longitude")));
+                                Log.d(TAG, "onSuccess: distanceToCurrentUser is " + locationA.distanceTo(locationB));
                                 // Create User using JSONArray
                                 User newUser = new User(
                                         user.getString("username"),
                                         Double.parseDouble(user.getString("latitude")),
-                                        Double.parseDouble(user.getString("longitude"))
+                                        Double.parseDouble(user.getString("longitude")),
+                                        locationA.distanceTo(locationB)
                                 );
                                 Log.d(TAG, "onResponse: " + newUser.toString());
+                                // Don't add currentUser to list of users in UserRecyclerViewFragment
+//                                if (newUser.getName().equals(currentUser.getName())) {
+//                                    continue;
+//                                }
                                 // Add newUser to ArrayList<User> mUsers
                                 mUsers.add(newUser);
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
                         }
+
+                        // Sort users by distance from the currentUser in UserRecyclerViewFragment - sort() will use compareTo() method in User class
+                        Collections.sort(mUsers);
+
                         // Get reference to fragment containers
                         containerUserRecyclerViewFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_user_list_container);
                         containerMapFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_map_container);
@@ -280,7 +224,7 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
                         // If fragment_map_container is present, then the activity should be in two-pane mode.
                         mDoublePane = (findViewById(R.id.fragment_map_container) != null);
 
-                        // TODO sort users by distance from the currentUser
+
 
                         if (containerUserRecyclerViewFragment == null && !mDoublePane) {
                             // App opened in portrait mode
@@ -293,7 +237,7 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
                             getSupportFragmentManager()
                                     .beginTransaction()
                                     .replace(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers, mDoublePane))
-//                                    .replace(R.id.fragment_map_container, MapFragment.newInstance(currentUser, mUsers, mDoublePane))
+//                            .replace(R.id.fragment_map_container, MapFragment.newInstance(currentUser, mUsers, mDoublePane))
                                     .commitAllowingStateLoss();
                         }
 
@@ -306,9 +250,9 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
                                 getSupportFragmentManager()
                                         .beginTransaction()
                                         .replace(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers, mDoublePane))
-                                        .commitAllowingStateLoss();
+                                        .commit();
                             }
-                        } else if (containerUserRecyclerViewFragment instanceof UserRecyclerViewFragment) {
+                        } else if (containerUserRecyclerViewFragment instanceof UserRecyclerViewFragment && mDoublePane) {
                             Log.d("Went from portrait to landscape. Double pane should be true == ", String.valueOf(mDoublePane));
                             if (containerUserRecyclerViewFragment != null && ((UserRecyclerViewFragment) containerUserRecyclerViewFragment).getUsers() != null) {
                                 mUsers = ((UserRecyclerViewFragment) containerUserRecyclerViewFragment).getUsers();
@@ -320,10 +264,103 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
                         }
                     }
                 });
-                // TODO update MapView with all user's new locations every 30 seconds - just create a new MapFragment.getInstance(mUsers)
-                handler.postDelayed(this, fetchInterval);
+
+                // Fetch list of users every 30 seconds
+                handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mUsers.size() > 0) {
+                            mUsers.clear();
+                        }
+                        Log.d(TAG, "run: Fetched new list of users");
+                        fetchUsers(new VolleyCallback() {
+                            @Override
+                            public void onSuccess(JSONArray response) {
+                                for (int i = 0; i < response.length(); i++) {
+                                    try {
+                                        JSONObject user = response.getJSONObject(i);
+                                        // Get distance between currentUser and user
+                                        Location locationA = new Location("Location A"); // User's last known location
+                                        locationA.setLatitude(Objects.requireNonNull(currentUser).getLatitude());
+                                        locationA.setLongitude(Objects.requireNonNull(currentUser).getLongitude());
+                                        Location locationB = new Location("Location B"); // User's current location
+                                        locationB.setLatitude(Double.parseDouble(user.getString("latitude")));
+                                        locationB.setLongitude(Double.parseDouble(user.getString("longitude")));
+                                        Log.d(TAG, "onSuccess: distanceToCurrentUser is " + locationA.distanceTo(locationB));
+                                        // Create User using JSONArray
+                                        User newUser = new User(
+                                                user.getString("username"),
+                                                Double.parseDouble(user.getString("latitude")),
+                                                Double.parseDouble(user.getString("longitude")),
+                                                locationA.distanceTo(locationB)
+                                        );
+                                        // Don't add currentUser to list of users in UserRecyclerViewFragment
+//                                        if (newUser.getName().equals(currentUser.getName())) {
+//                                            continue;
+//                                        }
+                                        Log.d(TAG, "onResponse: " + newUser.toString());
+                                        // Add newUser to ArrayList<User> mUsers
+                                        mUsers.add(newUser);
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+
+                                // Sort users by distance from the currentUser in UserRecyclerViewFragment - sort() will use compareTo() method in User class
+                                Collections.sort(mUsers);
+
+                                // Get reference to fragment containers
+                                containerUserRecyclerViewFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_user_list_container);
+                                containerMapFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_map_container);
+                                // The map container view will be present only in the large-screen layouts (res/values-w900dp).
+                                // If fragment_map_container is present, then the activity should be in two-pane mode.
+                                mDoublePane = (findViewById(R.id.fragment_map_container) != null);
+
+                                if (containerUserRecyclerViewFragment == null && !mDoublePane) {
+                                    // App opened in portrait mode
+                                    getSupportFragmentManager()
+                                            .beginTransaction()
+                                            .add(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers, mDoublePane))
+                                            .commitAllowingStateLoss();
+                                } else if (containerUserRecyclerViewFragment == null) {
+                                    // App opened in landscape mode
+                                    getSupportFragmentManager()
+                                            .beginTransaction()
+                                            .replace(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers, mDoublePane))
+//                                    .replace(R.id.fragment_map_container, MapFragment.newInstance(currentUser, mUsers, mDoublePane))
+                                            .commitAllowingStateLoss();
+                                }
+
+                                // Handle portrait to landscape and vice versa orientation changes
+                                // from landscape to portrait
+                                if (containerUserRecyclerViewFragment instanceof UserRecyclerViewFragment && !mDoublePane) {
+                                    if (((UserRecyclerViewFragment) containerUserRecyclerViewFragment).getUsers() != null) {
+                                        mUsers = ((UserRecyclerViewFragment) containerUserRecyclerViewFragment).getUsers();
+                                        mDoublePane = (findViewById(R.id.fragment_map_container) != null);
+                                        getSupportFragmentManager()
+                                                .beginTransaction()
+                                                .replace(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers, mDoublePane))
+                                                .commitAllowingStateLoss();
+                                    }
+                                } else if (containerUserRecyclerViewFragment instanceof UserRecyclerViewFragment) {
+                                    Log.d("Went from portrait to landscape. Double pane should be true == ", String.valueOf(mDoublePane));
+                                    if (containerUserRecyclerViewFragment != null && ((UserRecyclerViewFragment) containerUserRecyclerViewFragment).getUsers() != null) {
+                                        mUsers = ((UserRecyclerViewFragment) containerUserRecyclerViewFragment).getUsers();
+                                        getSupportFragmentManager()
+                                                .beginTransaction()
+                                                .replace(R.id.fragment_user_list_container, UserRecyclerViewFragment.newInstance(mUsers, mDoublePane))
+                                                .commit();
+                                    }
+                                }
+                            }
+                        });
+                        // TODO update MapView with all user's new locations every 30 seconds - just create a new MapFragment.getInstance(mUsers)
+                        handler.postDelayed(this, fetchInterval);
+                    }
+                }, fetchInterval);
             }
-        }, fetchInterval);
+        });
     }
 
     @Override
@@ -343,8 +380,6 @@ public class MainActivity extends AppCompatActivity implements UserRecyclerViewF
     @Override
     public void userSelected(int position) {
         User user = mUsers.get(position);
-
-        // TODO if doublePane
         /*
             Add user to bundle to be passed to MapFragment???
             What should MapFragment have in it or really be doing?
